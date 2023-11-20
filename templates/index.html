@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>웹 번역</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+</head>
+
+<body>
+    <h1>번역 웹 테스트</h1>
+    <a href="/">초기화</a>
+    <p>번역할 언어 코드</p>
+    <form action="/translate" method="post">
+        <select id="default_language" name="default_language">
+            <option value="">선택없음</option>
+            <option value="ko">한국어</option>
+            <option value="en">영어</option>
+        </select>
+        <select id="target_language" name="target_language">
+            <option value="ko">한국어</option>
+            <option value="en">영어</option>
+            <option value="ja">일본어</option>
+            <option value="vi">베트남어</option>
+            <option value="es">스페인어</option>
+            <option value="fr">프랑스어</option>
+            <option value="it">이탈리아어</option>
+        </select>
+        <input type="submit" value="번역"><br><br>
+        <p>번역할 문장</p>
+        <textarea id="text_to_translate" name="text" rows="5"
+            cols="30">{{ request.form['text'] if request.form.get('text') else '' }}</textarea>
+    </form>
+    <br>
+    <p>번역 결과</p>
+    <textarea id="translated_text" name="translated_text" rows="5" cols="30">{{ translated_text }}</textarea>
+    <br><br><br>
+    <form action="/extract" method="post" enctype="multipart/form-data">
+        <input type="file" id="psd_file" name="psd_file" accept=".psd">
+        <input type="submit" value="PSD에서 텍스트 추출">
+    </form>
+    <form action="/download_image" method="post" enctype="multipart/form-data">
+        <input type="file" id="psd_file" name="psd_file" accept=".psd">
+        <input type="submit" value="텍스트 제외 이미지 저장">
+    </form>
+    <br>
+    <p>추출된 레이어 정보</p>
+    <textarea id="extracted_text" name="extracted_text" rows="30" cols="50">{{ extracted_info }}</textarea>
+    <textarea id="layer_kind" name="layer_kind" rows="30" cols="50">{{ layer_kind_info }}</textarea>
+
+
+</body>
+
+</html>
