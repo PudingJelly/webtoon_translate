@@ -11,7 +11,14 @@ translator = Translator()
 @app.route("/")
 def index():
     return render_template(
-        "index.html", tranlated_text="", extracted_info="", layer_kind_info=""
+        "index.html",
+        tranlated_text="",
+        all_layer_info="",
+        extracted_info="",
+        extracted_text="",
+        # lower_layer_info="",
+        # lower_lower_layer_info="",
+        # lower_lower_lower_layer_info="",
     )
 
 
@@ -20,6 +27,7 @@ def translate():
     text = request.form["text"]
     target_language = request.form["target_language"]
     default_language = request.form["default_language"]
+    extracted_text_data = request.form.getlist("extracted_text_data")
 
     if default_language == "":
         translated_text = translator.translate(text, dest=target_language).text
@@ -28,79 +36,60 @@ def translate():
             text, src=default_language, dest=target_language
         ).text
 
-    return render_template("index.html", translated_text=translated_text)
+    return render_template(
+        "index.html",
+        translated_text=translated_text,
+        extracted_text_data=extracted_text_data,
+    )
 
 
 @app.route("/extract", methods=["POST"])
 def extract_text():
-    psd_file = request.files["psd_file"]
+    source_file = request.files["source_file"]
+    all_layer_info = []
     extracted_info = []
-    layer_kind_info = []
+    extracted_text_data = []
+    # lower_layer_info = []
+    # lower_lower_layer_info = []
+    # lower_lower_lower_layer_info = []
 
-    if psd_file:
+    if source_file:
         try:
-            psd = PSDImage.open(psd_file)
-            print(vars(psd))
+            source = PSDImage.open(source_file)
+            all_layer_info = vars(source)
+
+            # 텍스트 레이어 추출
             layer_info = []
-            for layer in psd:
-                layer_kind_info.append(layer.kind)
-                if layer.kind == "pixel":
-                    layer_info = {
-                        "kind": layer.kind,
-                        "name": layer.name,
-                        "bbox": layer.bbox,
-                        "size": layer.size,
-                    }
-                # layer_kind_info.append(layer.name)
-                elif layer.kind == "type":
-                    layer_info = {
-                        "kind": layer.kind,
-                        "name": layer.name,
-                        "bbox": layer.bbox,
-                        "size": layer.size,
-                        "text": layer.text,
-                    }
-                elif layer.kind == "group":
-                    layer_info = {
-                        "kind": layer.kind,
-                        "name": layer.name,
-                        "bbox": layer.bbox,
-                        "size": layer.size,
-                        "layer": layer,
-                    }
-                extracted_info.append(layer_info)
-            print(layer_kind_info)
+            for layer in source.descendants(include_clip=True):
+                if layer.kind == "type":
+                    layer_info.append(
+                        {
+                            "kind": layer.kind,
+                            "name": layer.name,
+                            "text": layer.text,
+                            "top": layer.top,
+                            "left": layer.left,
+                        }
+                    )
+            extracted_info = layer_info
+
+            # 텍스트 레이어의 정보 추출
+            for layer in extracted_info:
+                extracted_text_data.append(
+                    layer["text"],
+                )
+            # print(extracted_text_data[1])
 
         except Exception as e:
             extracted_info = f"Error extracting text: {str(e)}"
+            extracted_text_data = []
 
     return render_template(
-        "index.html", extracted_info=extracted_info, layer_kind_info=layer_kind_info
+        "index.html",
+        all_layer_info=all_layer_info,
+        extracted_info=extracted_info,
+        extracted_text_data=extracted_text_data,
     )
-
-
-@app.route('/download_image', methods=['POST'])
-def download_image_without_text():
-    try:
-        psd_file = request.files['psd_file']
-
-        if psd_file:
-            psd = PSDImage.open(psd_file)
-            img = Image.new("RGBA", (psd.width, psd.height), (255, 255, 255, 0))
-
-            for layer in psd:
-                if layer.kind != 'type':  # 텍스트 레이어를 제외한 다른 레이어 필터링
-                    img.paste(layer.compose(), (0, 0), layer.compose())
-            
-            img_io = BytesIO()
-            img.save(img_io, format='JPEG')
-
-            img_io.seek(0)
-            return send_file(img_io, mimetype='image/jpeg', as_attachment=True, download_name=f'{psd_file.filename}_without_text.jpg')
-    
-    
-    except Exception as e:
-        return f"Error downloading image: {str(e)}"
 
 
 if __name__ == "__main__":
