@@ -31,7 +31,9 @@
                 <input type="submit" value="번역"><br><br>
                 <p>번역할 문장</p>
                 <textarea id="text_to_translate" name="text" rows="5"
-                    cols="30">{{ request.form['text'] if request.form.get('text') else '' }}</textarea>
+                    cols="30">{% if extracted_text_data %}{{ extracted_text_data[1] }}{% else %}{{ request.form['text'] if request.form.get('text') else '' }}{% endif %}</textarea>
+                <!-- <textarea id="text_to_translate" name="text" rows="5"
+                    cols="30">{{ request.form['text'] if request.form.get('text') else '' }}</textarea> -->
             </form>
             <br>
             <p>번역 결과</p>
@@ -50,7 +52,7 @@
         </div>
         <div>
             {% for text_data in extracted_text_data %}
-                <a href="#" onclick="fillText('{{ text_data }}')">{{ text_data }}</a><br>
+            <a href="#" onclick="fillText('{{ text_data }}')">{{ text_data }}</a><br>
             {% endfor %}
         </div>
     </div>
@@ -71,7 +73,15 @@
 
     <script>
         function fillText(text) {
-            document.getElementById('text_to_translate').value = text;
+            try {
+                // text를 JSON으로 파싱하여 오류가 발생하는지 확인
+                var parsedText = JSON.parse('"' + text + '"');
+                parsedText = parsedText.replace(/\r/g, ''); // \r을 제거
+                document.getElementById('text_to_translate').value = parsedText;
+                console.log(parsedText);
+            } catch (error) {
+                console.error('Error occurred:', error);
+            }
         }
     </script>
 
