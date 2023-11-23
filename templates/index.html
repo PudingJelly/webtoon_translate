@@ -30,18 +30,18 @@
                 </select>
                 <input type="submit" value="번역"><br><br>
                 <p>번역할 문장</p>
-                <textarea id="text_to_translate" name="text" rows="5"
-                    cols="30">{% if extracted_text_data %}{{ extracted_text_data[1] }}{% else %}{{ request.form['text'] if request.form.get('text') else '' }}{% endif %}</textarea>
                 <!-- <textarea id="text_to_translate" name="text" rows="5"
-                    cols="30">{{ request.form['text'] if request.form.get('text') else '' }}</textarea> -->
+                    cols="30">{% if extracted_text_data %}{{ extracted_text_data[1] }}{% else %}{{ request.form['text'] if request.form.get('text') else '' }}{% endif %}</textarea> -->
+                <textarea id="text_to_translate" name="text" rows="5"
+                    cols="30">{{ request.form['text'] if request.form.get('text') else '' }}</textarea>
             </form>
             <br>
             <p>번역 결과</p>
             <textarea id="translated_text" name="translated_text" rows="5" cols="30">{{ translated_text }}</textarea>
             <br><br><br>
-            <form action="/extract" method="post" enctype="multipart/form-data">
-                <input type="file" id="source_file" name="source_file" accept=".psd, psb">
-                <input type="submit" value="PSD 레이어 정보 추출">
+            <form id="uploadForm" action="/extract" method="post" onchange="submitForm()" enctype="multipart/form-data">
+                <input type="file" id="source_file" name="source_file" accept=".psd, psb" multiple>
+                <!-- <input type="submit" value="PSD 레이어 정보 추출"> -->
             </form>
             <br>
             <!-- <form action="/download_image" method="post" enctype="multipart/form-data">
@@ -52,18 +52,18 @@
         </div>
         <div>
             {% for text_data in extracted_text_data %}
-            <a href="#" onclick="fillText('{{ text_data }}')">{{ text_data }}</a><br>
+            <a href="#" onclick='fillText("{{ text_data }}")'>{{ text_data }}</a><br>   
             {% endfor %}
         </div>
     </div>
     <div style="display: flex">
         <div>
             <p>레이어 정보</p>
-            <textarea id="all_layer_info" name="all_layer_info" rows="20" cols="45">{{ all_layer_info }}</textarea>
+            <textarea id="all_layer_info" name="all_layer_info" rows="20" cols="45">{{ layer_info }}</textarea>
         </div>
         <div>
             <p>텍스트 레이어 정보</p>
-            <textarea id="extracted_info" name="extracted_info" rows="20" cols="45">{{ extracted_info }}</textarea>
+            <textarea id="extracted_info" name="extracted_info" rows="20" cols="45">{{ all_extracted_info_list }}</textarea>
         </div>
         <div>
             <p>텍스트 정보</p>
@@ -72,6 +72,14 @@
     </div>
 
     <script>
+        window.onload = function() {
+
+            function submitForm() {
+                document.getElementById("uploadForm").submit();
+            }
+            document.getElementById("source_file").addEventListener("change", e => submitForm());
+        }
+
         function fillText(text) {
             try {
                 // text를 JSON으로 파싱하여 오류가 발생하는지 확인
