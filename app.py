@@ -3,7 +3,7 @@ import os
 from flask import Flask, render_template, request, send_file
 from googletrans import Translator
 from psd_tools import PSDImage
-from PIL import Image, ImageDraw, ImageChops
+from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
 translator = Translator()
@@ -13,51 +13,28 @@ translator = Translator()
 def index():
     return render_template(
         "index.html",
-        tranlated_text="",
         all_layer_info="",
-        extracted_info="",
-        extracted_text="",
-        # lower_layer_info="",
-        # lower_lower_layer_info="",
-        # lower_lower_lower_layer_info="",
-    )
-
-
-@app.route("/translate", methods=["POST"])
-def translate():
-    text = request.form["text"]
-    target_language = request.form["target_language"]
-    default_language = request.form["default_language"]
-    extracted_text_data = request.form.getlist("extracted_text_data")
-
-    if default_language == "":
-        translated_text = translator.translate(text, dest=target_language).text
-    else:
-        translated_text = translator.translate(
-            text, src=default_language, dest=target_language
-        ).text
-
-    return render_template(
-        "index.html",
-        translated_text=translated_text,
-        extracted_text_data=extracted_text_data,
+        all_extracted_info_list="",
+        extracted_text_data="",
+        translated_text_data="",
     )
 
 
 @app.route("/extract", methods=["POST"])
 def extract_text():
     # HTML에 출력하기 위한 리스트 초기화
-    layer_info = []
-    extracted_info = []
+    all_layer_info = []
+    all_extracted_info_list = []
     extracted_text_data = []
+    translated_text_data = []
 
     try:
         source_files = request.files.getlist("source_file")
         for source_file in source_files:
-            source = PSDImage.open(source_file)
+            source = PSDImage.open(source_file, encoding="cp1252")
 
             if source:
-                layer_info = vars(source)  # 레이어의 정보
+                all_layer_info = vars(source)  # 레이어의 정보
 
                 # PSD 파일의 이미지 추출
                 image = source.compose()
@@ -70,17 +47,17 @@ def extract_text():
                     "C:/Users/remis/Desktop/test-images/remove_text_test/remove_text/"
                 )
                 remove_text_base_name = f"{original_filename}_remove_text.png"
-                text_save_path = (
-                    "C:/Users/remis/Desktop/test-images/remove_text_test/text/"
-                )
-                text_base_name = f"{original_filename}_text.png"
 
-                # 텍스트 레이어 추출
-                layer_info = []
+                translated_text_save_path = "C:/Users/remis/Desktop/test-images/remove_text_test/translated_text/"
+                translated_text_base_name = f"{original_filename}_translated_text.png"
+
+                # 텍스트 레이어 추출을 위한 리스트 초기화
+                text_layer_info = []
+
                 # 모든 하위 레이어들을 찾아서 텍스트 레이어만 추출
                 for layer in source.descendants(include_clip=True):
                     if layer.kind == "type":
-                        layer_info.append(
+                        text_layer_info.append(
                             {
                                 "kind": layer.kind,
                                 "name": layer.name,
@@ -91,56 +68,65 @@ def extract_text():
                             }
                         )
                 # 텍스트 레이어 정보 추출
-                extracted_info = layer_info
-                all_extracted_info_list.append(layer_info)
+                extracted_info = text_layer_info
+                all_extracted_info_list.append(text_layer_info)
 
                 # 이미지 분리를 위한 원본소스 복사
-                remove_text_image = image.copy()
-                text_image = image.copy()
+                # remove_text_image = image.copy()
+                translated_text_image = image.copy()
 
-                extracted_text_data = []
-                text_masks = []
+                # font_size = 100  # 폰트 크기 설정
+                font = ImageFont.truetype("arial.ttf", 90)  # 사용할 폰트와 크기 설정
+
                 # 텍스트 레이어의 좌표, 크기 세분화 추출
+                # detail_info =[]
                 for layer in extracted_info:
-                    top, left, width, height = (
+                    name, text, top, left, width, height = (
+                        layer["name"],
+                        layer["text"],
                         layer["top"],
                         layer["left"],
                         layer["size"][0],
                         layer["size"][1],
                     )
+                    extracted_text_data.append(layer["text"])
+                    clean_text = text.replace('\r', '\n')
+                    print(clean_text)
+                    translated_name = translator.translate(
+                        clean_text, src="ko", dest="en"
+                    ).text
+                    print(translated_name)
 
-                    if remove_text_image:
-                        white_box = Image.new("RGB", (width, height), color="white")
-                        remove_text_image.paste(white_box, (left, top))
-
-                    if text_image:
-                        mask = Image.new("L", image.size, 0)
-                        draw = ImageDraw.Draw(mask)
-                        draw.rectangle(
-                            [(left, top), (left + width, top + height)], fill=255
-                        )
-                        text_masks.append(mask)
+                    # if remove_text_image:
+                    #     white_box = Image.new("RGB", (width, height), color="white")
+                    #     remove_text_image.paste(white_box, (left, top))
                     
-                    text_image.putalpha(mask)
-                    # 텍스트 레이어 데이터
-                extracted_text_data.append(layer["name"])
+                    white_box = Image.new("RGB", (width+170, height+80), color="white")
+                    draw = ImageDraw.Draw(white_box)
+                    draw.text((0, 10), translated_name, fill="black", font=font)
+                    translated_text_image.paste(white_box, (left-100, top-50))
+
+                    # 번역내용 화면에 출력
+                    # translated_text_data.append(translated_text)
 
                 # 이미지 저장
-                remove_text_image.save(remove_text_save_path + remove_text_base_name)
-                text_image.save(text_save_path + text_base_name)
-
-                all_layer_info_list.append(all_layer_info)
+                # remove_text_image.save(remove_text_save_path + remove_text_base_name)
+                translated_text_image.save(
+                    translated_text_save_path + translated_text_base_name
+                )
 
     except Exception as e:
-        layer_info = []
+        all_layer_info = []
         all_extracted_info_list = f"Error extracting text: {str(e)}"
         extracted_text_data = []
+        translated_text_data = []
 
     return render_template(
         "index.html",
-        layer_info=layer_info,
+        all_layer_info=all_layer_info,
         all_extracted_info_list=all_extracted_info_list,
         extracted_text_data=extracted_text_data,
+        translated_text_data=translated_text_data,
     )
 
 

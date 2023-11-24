@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>웹 번역</title>
+    <link rel="stylesheet" href="../static/css/index.css">
+</head>
+
+<body>
+    <div style="display: flex">
+        <div>
+            <!-- <h1>번역 웹 테스트</h1> -->
+            <a href="/">초기화</a>
+            <!-- <p>번역할 언어 코드</p>
+            <form action="/translate" method="post">
+                <select id="default_language" name="default_language">
+                    <option value="">선택없음</option>
+                    <option value="ko">한국어</option>
+                    <option value="en">영어</option>
+                </select>
+                <select id="target_language" name="target_language">
+                    <option value="ko">한국어</option>
+                    <option value="en">영어</option>
+                    <option value="ja">일본어</option>
+                    <option value="vi">베트남어</option>
+                    <option value="es">스페인어</option>
+                    <option value="fr">프랑스어</option>
+                    <option value="it">이탈리아어</option>
+                </select>
+                <input type="submit" value="번역"><br><br>
+                <p>번역할 문장</p> -->
+                <!-- <textarea id="text_to_translate" name="text" rows="5"
+                    cols="30">{% if extracted_text_data %}{{ extracted_text_data[1] }}{% else %}{{ request.form['text'] if request.form.get('text') else '' }}{% endif %}</textarea> -->
+                <!-- <textarea id="text_to_translate" name="text" rows="5"
+                    cols="30">{{ request.form['text'] if request.form.get('text') else '' }}</textarea>
+            </form> -->
+            <br>
+            <!-- <p>번역 결과</p>
+            <textarea id="translated_text" name="translated_text" rows="5" cols="30">{{ translated_text }}</textarea>
+            <br><br><br> -->
+            <form id="uploadForm" action="/extract" method="post" onchange="submitForm()" enctype="multipart/form-data">
+                <input type="file" id="source_file" name="source_file" accept=".psd, psb" multiple>
+                <!-- <input type="submit" value="PSD 레이어 정보 추출"> -->
+            </form>
+            <br>
+            <!-- <form action="/download_image" method="post" enctype="multipart/form-data">
+                <input type="file" id="toon_file" name="toon_file" accept=".psd, .psb" >
+                <input type="submit" value="텍스트 제외 이미지 저장">
+            </form> -->
+            <br>
+        </div>
+        <!-- <div>
+            {% for text_data in extracted_text_data %}
+            <a href="#" onclick='fillText("{{ text_data }}")'>{{ text_data }}</a><br>   
+            {% endfor %}
+        </div> -->
+    </div>
+    <div style="display: flex">
+        <div>
+            <p>레이어 정보</p>
+            <textarea id="all_layer_info" name="all_layer_info" rows="20" cols="45">{{ layer_info }}</textarea>
+        </div>
+        <div>
+            <p>텍스트 레이어 정보</p>
+            <textarea id="extracted_info" name="extracted_info" rows="20" cols="45">{{ all_extracted_info_list }}</textarea>
+        </div>
+        <div>
+            <p>텍스트 정보</p>
+            <textarea id="extracted_text" name="extracted_text" rows="20" cols="45">{{ extracted_text_data }}</textarea>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+
+            function submitForm() {
+                document.getElementById("uploadForm").submit();
+            }
+            document.getElementById("source_file").addEventListener("change", e => submitForm());
+        }
+    </script>
+
+</body>
+
+</html>
