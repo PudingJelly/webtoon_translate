@@ -1,4 +1,7 @@
-#text_to_translate, #translated_text {
+#all_layer_info,
+#extracted_info,
+#extracted_text,
+#translated_text {
     border-radius: 10px;
     border: 2px solid lightgray;
     resize: none;
