@@ -1,7 +1,7 @@
 from io import BytesIO
 from werkzeug.utils import secure_filename
 import os
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, send_file
 from googletrans import Translator
 from psd_tools import PSDImage
 from PIL import Image, ImageDraw, ImageFont
@@ -45,6 +45,7 @@ def upload_file():
             image = source.compose()
             # 원본 파일 이름 추출
             original_filename = os.path.splitext(source_file.filename)[0]
+            session["original_filename"] = original_filename
             # 원본 png 변환 후 저장
             converted_image_path = (
                 f"static/images/original-converted/{original_filename}.png"
@@ -53,7 +54,17 @@ def upload_file():
 
             # 모든 하위 레이어들을 찾아서 텍스트 레이어만 추출
             for layer in source.descendants(include_clip=True):
-                all_layer_info.append(layer)
+                if layer.name == "말풍선":
+                    all_layer_info.append(
+                        {
+                            "kind": layer.kind,
+                            "name": layer.name,
+                            "top": layer.top,
+                            "left": layer.left,
+                            "size": layer.size,
+                        }
+                    )
+                    # all_layer_info.append(sub_layer)
                 if layer.kind == "type":
                     text_layer_info.append(
                         {
@@ -79,6 +90,7 @@ def upload_file():
                     layer["size"][1],
                 )
                 extracted_text_data.append(text)
+                print(len(extracted_text_data))
                 clean_text = text.replace("\r", "\n")
                 translated_text = translator.translate(
                     clean_text, src="ko", dest=target_language
@@ -109,13 +121,16 @@ def upload_file():
             translated_text_base_name = f"{original_filename}_{target_language}.png"
             if not os.path.exists(translated_text_save_path):
                 os.mkdir(translated_text_save_path)
-            translated_image = translated_text_save_path + translated_text_base_name
-            translated_text_image.save(translated_image)
+            translated_image_path = (
+                translated_text_save_path + translated_text_base_name
+            )
+            session["translated_image_path"] = translated_image_path
+            translated_text_image.save(translated_image_path)
 
             return render_template(
                 "index.html",
                 image_data=converted_image_path,
-                translated_text_image_data=translated_image,
+                translated_text_image_data=translated_image_path,
                 all_layer_info=all_layer_info,
                 text_layer_info=text_layer_info,
                 extracted_text_data=extracted_text_data,
@@ -132,6 +147,12 @@ def upload_file():
             extracted_text_data=[],
             translated_text_data=[],
         )
+
+
+@app.route("/download")
+def download():
+    translated_image_path = session.get("translated_image_path")
+    return send_file(translated_image_path, as_attachment=True)
 
 
 if __name__ == "__main__":
