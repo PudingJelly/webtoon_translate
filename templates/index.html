@@ -64,13 +64,12 @@
             {% for index in range(extracted_text_data|length) %}
             <div>
                 <p>{{ extracted_text_data[index] }}</p>
-                <textarea id="tr_text_data_{{index}}" name="tr_text_data" class="tr_text_data" cols="30"
+                <textarea name="tr_text_data{{ index }}" class="tr_text_data" cols="30"
                     rows="10">{{ translated_text_data[index] }}</textarea>
             </div>
             {% endfor %}
             <form id="userTranslationForm" action="/user_translation" method="post" enctype="multipart/form-data">
-                <textarea name="modified_text" id="modifiedTexts" style="/*display: none;*/"></textarea>
-                <input type="submit" id="userTranslation" value="사용자 번역" onclick="prepareModifiedTexts()">
+                <input type="button" id="userTranslation" value="사용자 번역" onclick="prepareModifiedTexts()">
             </form>
         </div>
         <div>

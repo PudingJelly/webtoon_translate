@@ -180,9 +180,7 @@ def user_translation():
     user_translated_text_data = []
     user_translated_text = []
     
-    modified_texts_str = request.form['modified_text']
-    modified_texts = modified_texts_str.split("\n") if modified_texts_str else []
-
+    modified_texts = request.form.getlist('modified_text')
     print(modified_texts)
 
     text_layer_info = session.get("text_layer_info")
