@@ -1,3 +1,30 @@
+from io import BytesIO
+from werkzeug.utils import secure_filename
+import os
+from flask import Flask, render_template, request, session, send_file
+from googletrans import Translator
+from psd_tools import PSDImage
+from PIL import Image, ImageDraw, ImageFont
+
+app = Flask(__name__)
+app.secret_key = "webtoontest"
+translator = Translator()
+
+
+@app.route("/")
+def index():
+    session.clear()
+    return render_template(
+        "index.html",
+        image_data=None,
+        translated_text_image_data=None,
+        all_layer_info="",
+        all_extracted_info_list="",
+        extracted_text_data="",
+        translated_text_data="",
+    )
+
+
 @app.route("/upload", methods=["POST"])
 def upload_file():
     # HTML에 출력하기 위한 리스트 초기화
@@ -51,7 +78,7 @@ def upload_file():
                         }
                     )
             # 이미지 분리를 위한 원본소스 복사
-            remove_text_image = image.copy()
+            common_image = image.copy()
             # translated_text_image = image.copy()
             # 텍스트 레이어의 좌표, 크기 세분화 추출
             for layer in text_layer_info:
@@ -85,13 +112,13 @@ def upload_file():
                 )
 
                 white_box = Image.new("RGB", (width, height), color="white")
-                remove_text_image.paste(white_box, (left, top))
+                common_image.paste(white_box, (left, top))
 
             # 텍스트제거 이미지 저장
             remove_text_save_path = (
                 f"static/images/remove-text/{original_filename}_remove_text.png"
             )
-            remove_text_image.save(remove_text_save_path)
+            common_image.save(remove_text_save_path)
 
             # 텍스트제거 이미지에 번역텍스트 삽입
             for layer, translated_text in zip(text_layer_info, translated_text_data):
@@ -110,7 +137,7 @@ def upload_file():
                 )
                 draw = ImageDraw.Draw(text_box)
                 draw.text((0, 0), translated_text, fill="black", font=font)
-                remove_text_image.paste(text_box, (left, top), mask=text_box)
+                common_image.paste(text_box, (left, top), mask=text_box)
 
             # 번역 이미지 저장
             translated_text_save_path = (
@@ -125,7 +152,7 @@ def upload_file():
             translated_image_path = (
                 translated_text_save_path + translated_text_base_name
             )
-            remove_text_image.save(translated_image_path)
+            common_image.save(translated_image_path)
 
             # 세션에 번역이미지 경로 저장
             session["translated_image_path"] = translated_image_path
@@ -150,3 +177,13 @@ def upload_file():
             extracted_text_data=[],
             translated_text_data=[],
         )
+
+
+@app.route("/download")
+def download():
+    translated_image_path = session.get("translated_image_path")
+    return send_file(translated_image_path, as_attachment=True)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>웹 번역</title>
     <link rel="stylesheet" href="../static/css/index.css">
+    <script src="../static/js/common.js"></script>
 </head>
 
 <body>
@@ -15,38 +16,65 @@
             <br><br>
             <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
                 <input type="file" id="source_file" name="source_file" accept=".psd, psb">
-                <select id="target_language" name="target_language">
-                    <option value="en">영어</option>
-                    <option value="ja">일본어</option>
-                    <option value="vi">베트남어</option>
-                    <option value="es">스페인어</option>
-                    <option value="fr">프랑스어</option>
-                    <option value="it">이탈리아어</option>
-                </select>
-                <input type="submit" name="translate" id="translate" value="번역하기">
             </form>
-            <!-- <form id="translateForm" action="/translate" method="post" enctype="multipart/form-data"> -->
-                
+            <form id="translateForm" action="/auto_translation" method="post" enctype="multipart/form-data">
+                <select id="target_language" name="target_language">
+                    <option value="en">English</option>
+                    <option value="ja">Japnese</option>
+                    <option value="zh-CN">Chinese(Simplified)</option>
+                    <option value="zh-TW">Chinese (Traditional)</option>
+                    <option value="vi">Vietnamese</option>
+                    <option value="th">Thai</option>
+                    <!-- <option value="id">인도네시아어</option> -->
+                    <!-- <option value="hi">힌디어</option> -->
+                    <!-- <option value="es">스페인어</option> -->
+                    <!-- <option value="fr">프랑스어</option> -->
+                    <!-- <option value="de">독일어</option> -->
+                    <!-- <option value="ru">러시아어</option> -->
+                    <!-- <option value="pt">포르투갈어</option> -->
+                    <!-- <option value="it">이탈리아어</option> -->
+                </select>
+                <input type="submit" name="translate" id="translate" value="번역하기" onclick="test0()">
             </form>
             <br>
             <form action="/download" method="get">
-                <input type="submit" value="저장하기">
+                <input type="submit" value="이미지 다운로드">
             </form>
             <br>
         </div>
     </div>
     <div style="display: flex;">
-        <div>
-            <!-- 이미지가 출력되는 곳 -->
-            {% if image_data %}
-            <img src="{{ image_data }}" alt="PSD to PNG" width="500px" style="border: 2px solid black;">
-            {% endif %}
+        <div style="display: flex;">
+            <div>
+                <!-- 이미지가 출력되는 곳 -->
+                {% if image_data %}
+                <img src="{{ image_data }}" alt="PSD to PNG" width="500px" style="border: 2px solid black;">
+                {% endif %}
+            </div>
+            <div>
+                <!-- 이미지가 출력되는 곳 -->
+                {% if translated_text_image_data %}
+                <img src="{{ translated_text_image_data }}" alt="PSD to PNG" width="500px"
+                    style="border: 2px solid black;">
+                {% endif %}
+            </div>
         </div>
         <div>
-            <!-- 이미지가 출력되는 곳 -->
-            {% if translated_text_image_data %}
-            <img src="{{ translated_text_image_data }}" alt="PSD to PNG" width="500px" style="border: 2px solid black;">
-            {% endif %}
+            <!-- extracted_text_data의 길이 만큼 요소들 생성 -->
+            {% for index in range(extracted_text_data|length) %}
+            <div>
+                <p>{{ extracted_text_data[index] }}</p>
+                <textarea id="tr_text_data_{{index}}" name="tr_text_data" class="tr_text_data" cols="30"
+                    rows="10">{{ translated_text_data[index] }}</textarea>
+            </div>
+            {% endfor %}
+            <form id="userTranslationForm" action="/user_translation" method="post" enctype="multipart/form-data">
+                <textarea name="modified_text" id="modifiedTexts" style="/*display: none;*/"></textarea>
+                <input type="submit" id="userTranslation" value="사용자 번역" onclick="prepareModifiedTexts()">
+            </form>
+        </div>
+        <div>
+
         </div>
     </div>
     <hr>
@@ -71,15 +99,6 @@
         </div>
     </div>
 
-    <!-- <script>
-        window.onload = function () {
-
-            function submitForm() {
-                document.getElementById("uploadForm").submit();
-            }
-            document.getElementById("source_file").addEventListener("change", e => submitForm());
-        }
-    </script> -->
 
 </body>
 
