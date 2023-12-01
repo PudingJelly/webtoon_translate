@@ -3,7 +3,7 @@ window.onload = function () {
     // 초기화 클릭
     document.getElementById("init").addEventListener("click", e => initailize());
     function initailize() {
-        window.location.href("/");
+        document.getElementById("initailize").submit();
     }
 
     // 파일가져오기 클릭
@@ -18,6 +18,11 @@ window.onload = function () {
         document.getElementById("uploadForm").submit();
     });
 
+    // 저장하기
+    document.getElementById("download").addEventListener("click", function(e) {
+        document.getElementById("downloadForm").submit();
+    })
+
     // 전체 번역하기
     document.getElementById("translate-button").addEventListener("click", e => all_translation());
     function all_translation() {
@@ -25,8 +30,13 @@ window.onload = function () {
     }
     
     // 사용자 번역하기
+    // document.getElementById("modify-button").addEventListener("click", e => user_translation());
+    // function user_translation() {
+    //     document.getElementById("userTranslation").click();
+    // }
     document.getElementById("userTranslation").addEventListener("click", e => prepareModifiedTexts());
     function prepareModifiedTexts() {
+        console.log("호출!!");
         // 수정된 텍스트 데이터를 담을 빈 배열
         let modifiedTexts = [];
         let textAreas = document.querySelectorAll(".tr_text_data");
@@ -35,11 +45,14 @@ window.onload = function () {
             let value = textAreas[i].value.trim(); // 앞뒤 공백 제거
             modifiedTexts.push(value);
         }
+        console.log(modifiedTexts);
 
         sendModifiedTexts(modifiedTexts);
     };
 
     function sendModifiedTexts(modifiedTexts) {
+        console.log("호출22", modifiedTexts);
+
         let form = document.createElement('form');
         form.setAttribute('method', 'post');
         form.setAttribute('action', '/user_translation');
@@ -59,8 +72,8 @@ window.onload = function () {
         form.submit();
     };
 
-    const originImgContainer = document.getElementById("origin-img-container");
-    const translatedImgContainer = document.getElementById("translated-img-container");
+    const originImgContainer = document.querySelector(".toon-image-origin");
+    const translatedImgContainer = document.querySelector(".toon-image-translated");
 
     originImgContainer.addEventListener("scroll", function(e) {
         translatedImgContainer.scrollTop = this.scrollTop;

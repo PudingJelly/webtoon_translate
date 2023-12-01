@@ -52,14 +52,16 @@
                     <img src="../static/icon/forlder_before.png" alt="Icon">파일가져오기
                 </button>
 
-                <form action="/download" method="get">
+                <form id="downloadForm" action="/download" method="get">
                     <input type="submit" value="이미지 다운로드" style="display: none">
                 </form>
                 <button class="custom-button" id="download">
                     <img src="../static/icon/database_before.png" alt="Icon">저장하기
                 </button>
-
-                <a href="/" style="display: none">초기화</a>
+                
+                <form id="initailize" action="/">
+                    <input style="display: none" type="submit" value="초기화">
+                </form>
                 <button class="custom-button" id="init">
                     <img src="../static/icon/init_before.png" alt="Icon">초기화
                 </button>
@@ -102,7 +104,7 @@
                     <div id="image-content">
                         <div id="origin-img-container">
                             <h1 class="image-title">원본 이미지</h1>
-                            <div class="toon-image">
+                            <div class="toon-image toon-image-origin">
                                 {% if image_data %}
                                 <img src="{{ image_data }}" alt="PSD to PNG">
                                 {% endif %}
@@ -110,7 +112,7 @@
                         </div>
                         <div id="translated-img-container">
                             <h1 class="image-title">번역 이미지</h1>
-                            <div class="toon-image">
+                            <div class="toon-image toon-image-translated">
                                 {% if translated_text_image_data %}
                                 <img src="{{ translated_text_image_data }}" alt="PSD to PNG">
                                 {% endif %}
@@ -129,7 +131,7 @@
                                         <option value="vi">Vietnamese</option>
                                         <option value="th">Thai</option>
                                     </select>
-                                    <button class="custom-button" id="translate-button" onclick="">
+                                    <button class="custom-button" id="translate-button">
                                         자동번역
                                     </button>
                                     <input style="display:none;" type="button" name="translate" value="전체 자동 번역">
@@ -145,10 +147,8 @@
                             {% endfor %}
                             <form id="userTranslationForm" action="/user_translation" method="post"
                                 enctype="multipart/form-data">
-                                <button class="custom-button" id="modify-button" onclick="">
-                                    적용하기
-                                </button>
-                                <input style="display: none;" type="button" id="userTranslation" value="사용자 번역" onclick="prepareModifiedTexts()">
+                                
+                                <input type="button" id="userTranslation" value="사용자 번역">
                             </form>
                         </div>
                     </div>
@@ -158,25 +158,6 @@
         <!-- End of Content Wrapper -->
 
     </div>
-
-    <script>
-        var image1 = new Image();
-        var image2 = new Image();
-
-        image1.onload = function() {
-            var canvas = document.getElementById('canvas');
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(image1, 0, 0, 500, 500); // 첫 번째 이미지를 Canvas에 그림
-        };
-        image1.src = "{{ image_data }}"; // 이미지 데이터를 넣어줘야 합니다.
-
-        image2.onload = function() {
-            var canvas = document.getElementById('canvas');
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(image2, 0, 0, 500, 500); // 두 번째 이미지를 Canvas에 그림
-        };
-        image2.src = "{{ translated_text_image_data }}"; // 이미지 데이터를 넣어줘야 합니다.
-    </script>
 
 </body>
 
