@@ -10,10 +10,10 @@ translator = Translator()
 
 
 @app.route("/")
-def index():
+def home():
     session.clear()
     return render_template(
-        "index.html",
+        "translate.html",
         image_data=None,
         translated_text_image_data=None,
         all_layer_info="",
@@ -95,7 +95,7 @@ def upload_file():
             session["remove_text_save_path"] = remove_text_save_path
 
             return render_template(
-                "index.html",
+                "translate.html",
                 image_data=converted_image_path,
                 text_layer_info=text_layer_info,
                 extracted_text_data=extracted_text_data,
@@ -104,7 +104,7 @@ def upload_file():
 
     except Exception as e:
         return render_template(
-            "index.html",
+            "translate.html",
             image_data=None,
             translated_text_image_data=None,
             all_layer_info=f"Error extracting text: {str(e)}",
@@ -167,7 +167,7 @@ def auto_translation():
     session["translated_text_data"] = translated_text_data
 
     return render_template(
-        "index.html",
+        "translate.html",
         image_data=converted_image_path,
         translated_text_image_data=translated_image_path,
         text_layer_info=text_layer_info,
@@ -228,7 +228,7 @@ def user_translation():
     session["translated_image_path"] = user_translated_image_path
     
     return render_template(
-        "index.html",
+        "translate.html",
         image_data=converted_image_path,
         translated_text_image_data=user_translated_image_path,
         text_layer_info=text_layer_info,

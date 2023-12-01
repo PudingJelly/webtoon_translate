@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <title>번역</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Custom fonts for this template-->
+    <link href="../static/all.min.css" rel="stylesheet" type="text/css">
+    <link href="../static/css" rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="../static/sb-admin-2.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/translate_css/translate.css">
+
+    <!-- <link rel="stylesheet" type="text/css" href="../static/spectrum2.css"> -->
+    <!-- <link rel="stylesheet" type="text/css" href="../static/canvas2.css"> -->
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+    <link rel="shortcut icon" href="">
+
+    <!-- JS -->
+    <script src="../static/js/common.js"></script>
+    <script src="../static/crypto-js.min.js"></script>
+    <script src="../static/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/spectrum2.js"></script>
+</head>
+
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div>
+            <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+                <!-- Sidebar - Brand -->
+                <a class="sidebar-brand d-flex align-items-center justify-content-center" href="" id="mainLogo"
+                    style="background-color: white;">
+                    <div class="sidebar-brand-icon">
+                        <img src="../static/icon/in_logo.png" alt="" style="width:85%;">
+                    </div>
+                </a>
+
+                <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                    <input type="file" id="source_file" name="source_file" accept=".psd, psb" style="display: none">
+                </form>
+                <button class="custom-button" id="upload">
+                    <img src="../static/icon/forlder_before.png" alt="Icon">파일가져오기
+                </button>
+
+                <form action="/download" method="get">
+                    <input type="submit" value="이미지 다운로드" style="display: none">
+                </form>
+                <button class="custom-button" id="download">
+                    <img src="../static/icon/database_before.png" alt="Icon">저장하기
+                </button>
+
+                <a href="/" style="display: none">초기화</a>
+                <button class="custom-button" id="init">
+                    <img src="../static/icon/init_before.png" alt="Icon">초기화
+                </button>
+
+                <!-- Divider -->
+                <hr class="sidebar-divider d-none d-md-block">
+
+                <!-- Sidebar Toggler (Sidebar) -->
+                <!-- <div class="text-center d-none d-md-inline">
+                        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+                    </div> -->
+            </ul>
+        </div>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <!-- Main Content -->
+            <div id="content" style="padding-bottom: 20px;">
+                <!-- Topbar -->
+                <div>
+                    <!-- <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow pt-md-3" style="height:unset"> -->
+                    <nav id="navTop1"
+                        class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow pt-md-3"
+                        style="height: 4.375rem !important">
+
+                        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <div class="row justify-content-center" id="divTop1" style="width:100%;margin-bottom: 20px;">
+
+                        </div>
+                        <!-- Topbar Navbar -->
+                    </nav>
+                </div>
+                <!-- End of Topbar -->
+
+                <!-- Main-wrapper -->
+                <div id="main-wrapper">
+                    <div id="image-content">
+                        <div id="origin-img-container">
+                            <h1 class="image-title">원본 이미지</h1>
+                            <div class="toon-image">
+                                {% if image_data %}
+                                <img src="{{ image_data }}" alt="PSD to PNG">
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div id="translated-img-container">
+                            <h1 class="image-title">번역 이미지</h1>
+                            <div class="toon-image">
+                                {% if translated_text_image_data %}
+                                <img src="{{ translated_text_image_data }}" alt="PSD to PNG">
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div id="form-wrapper">
+                            <!-- extracted_text_data의 길이 만큼 요소들 생성 -->
+                            <div id="all-translate">
+                                <form id="translateForm" action="/auto_translation" method="post" enctype="multipart/form-data">
+                                    <select id="target_language" name="target_language">
+                                        <option value="en">English</option>
+                                        <option value="ja">Japnese</option>
+                                        <option value="zh-CN">Chinese(Simplified)</option>
+                                        <option value="zh-TW">Chinese (Traditional)</option>
+                                        <option value="vi">Vietnamese</option>
+                                        <option value="th">Thai</option>
+                                    </select>
+                                    <button class="custom-button" id="translate-button" onclick="">
+                                        자동번역
+                                    </button>
+                                    <input style="display:none;" type="button" name="translate" value="전체 자동 번역">
+                                </form>
+                            </div>
+                            <br>
+                            {% for index in range(extracted_text_data|length) %}
+                            <div>
+                                <h4 class="text_data">{{ extracted_text_data[index] }}</h4>
+                                <textarea name="tr_text_data{{ index }}" class="tr_text_data" cols="40"
+                                rows="3">{{ translated_text_data[index] }}</textarea>
+                            </div>
+                            {% endfor %}
+                            <form id="userTranslationForm" action="/user_translation" method="post"
+                                enctype="multipart/form-data">
+                                <button class="custom-button" id="modify-button" onclick="">
+                                    적용하기
+                                </button>
+                                <input style="display: none;" type="button" id="userTranslation" value="사용자 번역" onclick="prepareModifiedTexts()">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+
+    <script>
+        var image1 = new Image();
+        var image2 = new Image();
+
+        image1.onload = function() {
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(image1, 0, 0, 500, 500); // 첫 번째 이미지를 Canvas에 그림
+        };
+        image1.src = "{{ image_data }}"; // 이미지 데이터를 넣어줘야 합니다.
+
+        image2.onload = function() {
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(image2, 0, 0, 500, 500); // 두 번째 이미지를 Canvas에 그림
+        };
+        image2.src = "{{ translated_text_image_data }}"; // 이미지 데이터를 넣어줘야 합니다.
+    </script>
+
+</body>
+
+</html>
