@@ -1,5 +1,5 @@
 import os
-from flask import Flask, json, render_template, request, session, send_file
+from flask import Flask, render_template, request, session, send_file
 from googletrans import Translator
 from psd_tools import PSDImage
 from PIL import Image, ImageDraw, ImageFont
