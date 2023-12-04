@@ -28,9 +28,40 @@
     <script src="../static/crypto-js.min.js"></script>
     <script src="../static/jquery.min.js"></script>
     <script type="text/javascript" src="../static/spectrum2.js"></script>
+
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="http://code.jquery.com/jquery-3.5.1.js"></script>
 </head>
+<script>
+    $(function() {
+        $(".custom-button").hover(function(){
+            $(this).css('color', '#369fff')
 
+            if(this.id == 'upload') {
+                $(this).children('img').attr('src', '../static/icon/forlder_after.png');
+            } else if(this.id == 'download') {
+                $(this).children('img').attr('src', '../static/icon/database_after.png');
+            } else if(this.id == 'selColor') {
+                $(this).children('img').attr('src', '../static/icon/palette_after.png');
+            } else if(this.id == 'painter') {
+                $(this).children('img').attr('src', '../static/icon/brush_after.png');
+            } else if(this.id == 'init') {
+                $(this).children('img').attr('src', '../static/icon/init_after.png');
+            }
+            
+        },function(){
+            $(this).css('color', '#aaaaab')
 
+            if(this.id == 'upload') {
+                $(this).children('img').attr('src', '../static/icon/forlder_before.png');
+            } else if(this.id == 'download') {
+                $(this).children('img').attr('src', '../static/icon/database_before.png');
+            } else if(this.id == 'init') {
+                $(this).children('img').attr('src', '../static/icon/init_before.png');
+            }
+        });
+    }); 
+</script>
 <body id="page-top">
     <div id="wrapper">
         <!-- Sidebar -->
@@ -103,7 +134,7 @@
                 <div id="main-wrapper">
                     <div id="image-content">
                         <div id="origin-img-container">
-                            <h1 class="image-title">원본 이미지</h1>
+                            <h1 class="spanfont">원본 이미지</h1>
                             <div class="toon-image toon-image-origin">
                                 {% if image_data %}
                                 <img src="{{ image_data }}" alt="PSD to PNG">
@@ -111,7 +142,7 @@
                             </div>
                         </div>
                         <div id="translated-img-container">
-                            <h1 class="image-title">번역 이미지</h1>
+                            <h1 class="spanfont">번역 이미지</h1>
                             <div class="toon-image toon-image-translated">
                                 {% if translated_text_image_data %}
                                 <img src="{{ translated_text_image_data }}" alt="PSD to PNG">
@@ -122,8 +153,7 @@
                         <div id="form-wrapper">
                             <!-- extracted_text_data의 길이 만큼 요소들 생성 -->
                             <div id="all-translate">
-                                <form id="translateForm" action="/auto_translation" method="post"
-                                    enctype="multipart/form-data">
+                                <form id="translateForm" action="/auto_translation" method="post" enctype="multipart/form-data">
                                     <select id="target_language" name="target_language">
                                         <option value="en">English</option>
                                         <option value="ja">Japnese</option>
@@ -132,7 +162,8 @@
                                         <option value="vi">Vietnamese</option>
                                         <option value="th">Thai</option>
                                     </select>
-                                    <button class="custom-button" id="translate-button">
+                                    <button class="custom-button2" id="translate-button">
+                                        <img style="margin-right: 20px;" src="../static/icon/translate.png" alt="Icon">
                                         자동번역
                                     </button>
                                     <input style="display:none;" type="button" name="translate" value="전체 자동 번역">
@@ -143,15 +174,16 @@
                             <div>
                                 <h4 class="text_data">{{ extracted_text_data[index] }}</h4>
                                 <textarea name="tr_text_data{{ index }}" class="tr_text_data" cols="40"
-                                    rows="3">{{ translated_text_data[index] }}</textarea>
+                                rows="3">{{ translated_text_data[index] }}</textarea>
                             </div>
                             {% endfor %}
-                            <button class="custom-button" id="modify-button">
+                            <button class="custom-button2" id="modify-button">
+                                <img style="margin-right: 20px;" src="../static/icon/user_translate.png" alt="Icon">
                                 사용자 번역
                             </button>
                             <form id="userTranslationForm" action="/user_translation" method="post"
                                 enctype="multipart/form-data">
-                                <input style="display:none;" type="button" id="userTranslation" value="사용자 번역">
+                                <input style="display: none;" type="button" id="userTranslation" value="사용자 번역">
                             </form>
                         </div>
                     </div>
@@ -159,14 +191,15 @@
             </div>
         </div>
         <!-- End of Content Wrapper -->
-
     </div>
 
     <!-- 로딩써클 -->
     <div id="loadingOverlay" style="display: none;">
-        <div class="loader"></div>
+        <div class="loading-box">
+            <div class="loader"></div>
+            <div>업로드중</div>
+        </div>
     </div>
-
 
 </body>
 

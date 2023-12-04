@@ -1,4 +1,6 @@
 import os
+# import requests
+# import json
 from flask import Flask, render_template, request, session, send_file
 from googletrans import Translator
 from psd_tools import PSDImage
@@ -7,6 +9,24 @@ from PIL import Image, ImageDraw, ImageFont
 app = Flask(__name__)
 app.secret_key = "webtoontest"
 translator = Translator()
+
+# text = "안녕하세요"
+# source = 'kr'
+# target = 'en'
+
+# url = 'https://dapi.kakao.com/v3/translation/translate'
+# headers = {'Authorization': 'KakoAK2dbfc5c983dd45e8b7cbd82858a95c7d'}
+# data = {'src_lang': source, 'target_lang': target, 'query': text} 
+# response = requests.post(url=url, headers=headers, data=data) 
+# if response.status_code == 200:    
+#     result_tmp = response.json()['translated_text']    
+#     result = ''    
+#     for result_x in result_tmp:        
+#         result += result_x[0]        
+#         result += '\n'    
+#         print(result)
+# else:    
+#     print('Error Code:' + str(response.status_code))
 
 
 @app.route("/")
@@ -134,7 +154,7 @@ def auto_translation():
     source_size = session.get("source_size")
 
     target_language = request.form.get("target_language")
-    font_size = int(min(source_size) * 0.03)
+    font_size = int(min(source_size) * 0.04)
     font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", font_size)  # 사용할 폰트와 크기 설정
 
     # 텍스트를 삽입 할 이미지 복사
@@ -189,21 +209,19 @@ def user_translation():
     user_translated_text = []
     
     modified_texts = request.form.getlist('modified_text')
-    print(modified_texts)
 
+    # 세션값 가져오기
     text_layer_info = session.get("text_layer_info")
     original_filename = session.get("original_filename")
     remove_text_save_path = session.get("remove_text_save_path")
     target_language = session.get("target_language")
     converted_image_path = session.get("converted_image_path")
     extracted_text_data = session.get("extracted_text_data")
-    translated_text_data = session.get("translated_text_data")
     source_size = session.get("source_size")
     
-    font_size = int(min(source_size) * 0.03)
+    font_size = int(min(source_size) * 0.04)
     font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", font_size)
     user_translated_image = Image.open(remove_text_save_path).copy()
-    
     draw = ImageDraw.Draw(user_translated_image)
     
     for index, layer in enumerate(text_layer_info):
@@ -235,6 +253,7 @@ def user_translation():
     user_translated_image_path = user_translated_text_save_path + user_translated_text_base_name
     user_translated_image.save(user_translated_image_path)
     
+    # 번역 이미지 다운로드를 위한 경로 세션 저장
     session["translated_image_path"] = user_translated_image_path
     
     return render_template(

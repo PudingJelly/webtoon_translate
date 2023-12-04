@@ -1,148 +1,280 @@
-from io import BytesIO
 import os
-from flask import Flask, render_template, request, send_file
+import requests
+from flask import Flask, render_template, request, session, send_file
 from googletrans import Translator
 from psd_tools import PSDImage
-from PIL import Image, ImageDraw, ImageChops
+from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
+app.secret_key = "webtoontest"
 translator = Translator()
+
+# text = "안녕하세요"
+# source = 'kr'
+# target = 'en'
+
+# url = 'https://dapi.kakao.com/v3/translation/translate'
+# headers = {'Authorization': 'KakoAK2dbfc5c983dd45e8b7cbd82858a95c7d'}
+# data = {'src_lang': source, 'target_lang': target, 'query': text} 
+# response = requests.post(url=url, headers=headers, data=data) 
+# if response.status_code == 200:    
+#     result_tmp = response.json()['translated_text']    
+#     result = ''    
+#     for result_x in result_tmp:        
+#         result += result_x[0]        
+#         result += '\n'    
+#         print(result)
+# else:    
+#     print('Error Code:' + str(response.status_code))
 
 
 @app.route("/")
-def index():
+def home():
+    session.clear()
     return render_template(
-        "index.html",
-        tranlated_text="",
+        "translate.html",
+        image_data=None,
+        translated_text_image_data=None,
         all_layer_info="",
-        extracted_info="",
-        extracted_text="",
-        # lower_layer_info="",
-        # lower_lower_layer_info="",
-        # lower_lower_lower_layer_info="",
+        text_layer_info="",
+        extracted_text_data="",
+        translated_text_data="",
     )
 
 
-@app.route("/translate", methods=["POST"])
-def translate():
-    text = request.form["text"]
-    target_language = request.form["target_language"]
-    default_language = request.form["default_language"]
-    extracted_text_data = request.form.getlist("extracted_text_data")
-
-    if default_language == "":
-        translated_text = translator.translate(text, dest=target_language).text
-    else:
-        translated_text = translator.translate(
-            text, src=default_language, dest=target_language
-        ).text
-
-    return render_template(
-        "index.html",
-        translated_text=translated_text,
-        extracted_text_data=extracted_text_data,
-    )
-
-
-@app.route("/extract", methods=["POST"])
-def extract_text():
+@app.route("/upload", methods=["POST"])
+def upload_file():
     # HTML에 출력하기 위한 리스트 초기화
-    layer_info = []
-    extracted_info = []
+    text_layer_info = []
     extracted_text_data = []
+    translated_text_data  = []
+    all_layer_info = []
+    all_text_layer_info = []
 
     try:
-        source_files = request.files.getlist("source_file")
-        for source_file in source_files:
+        source_file = request.files["source_file"]
+
+        if source_file:
             source = PSDImage.open(source_file)
+            source_size = source.width, source.height
 
-            if source:
-                layer_info = vars(source)  # 레이어의 정보
+            # PSD 파일의 이미지 추출
+            image = source.compose()
+            # 원본 파일 이름 추출
+            original_filename = os.path.splitext(source_file.filename)[0]
 
-                # PSD 파일의 이미지 추출
-                image = source.compose()
+            # 원본 png 변환 후 저장
+            converted_image_path = (
+                f"static/images/original_converted/{original_filename}.png"
+            )
+            image.save(converted_image_path)
 
-                # 원본 파일 이름 추출
-                original_filename = os.path.splitext(source_file.filename)[0]
-
-                # 파일 저장 경로 및 네이밍
-                remove_text_save_path = (
-                    "C:/Users/remis/Desktop/test-images/remove_text_test/remove_text/"
-                )
-                remove_text_base_name = f"{original_filename}_remove_text.png"
-                text_save_path = (
-                    "C:/Users/remis/Desktop/test-images/remove_text_test/text/"
-                )
-                text_base_name = f"{original_filename}_text.png"
-
-                # 텍스트 레이어 추출
-                layer_info = []
-                # 모든 하위 레이어들을 찾아서 텍스트 레이어만 추출
-                for layer in source.descendants(include_clip=True):
-                    if layer.kind == "type":
-                        layer_info.append(
-                            {
-                                "kind": layer.kind,
-                                "name": layer.name,
-                                "text": layer.text,
-                                "top": layer.top,
-                                "left": layer.left,
-                                "size": layer.size,
-                            }
-                        )
-                # 텍스트 레이어 정보 추출
-                extracted_info = layer_info
-                all_extracted_info_list.append(layer_info)
-
-                # 이미지 분리를 위한 원본소스 복사
-                remove_text_image = image.copy()
-                text_image = image.copy()
-
-                extracted_text_data = []
-                text_masks = []
-                # 텍스트 레이어의 좌표, 크기 세분화 추출
-                for layer in extracted_info:
-                    top, left, width, height = (
-                        layer["top"],
-                        layer["left"],
-                        layer["size"][0],
-                        layer["size"][1],
+            # 모든 하위 레이어들을 찾아서 텍스트 레이어만 추출
+            for layer in source.descendants(include_clip=True):
+                all_layer_info.append(layer)
+                if layer.kind == "type":
+                    text_layer_info.append(
+                        {
+                            "kind": layer.kind,
+                            "name": layer.name,
+                            "text": layer.text,
+                            "top": layer.top,
+                            "left": layer.left,
+                            "size": layer.size,
+                        }
                     )
+            text_layer_info.sort(key=lambda x: x['top'])
+            
+            # 이미지 분리를 위한 원본소스 복사
+            common_image = image.copy()
 
-                    if remove_text_image:
-                        white_box = Image.new("RGB", (width, height), color="white")
-                        remove_text_image.paste(white_box, (left, top))
+            # 텍스트 레이어 세부정보 추출
+            for layer in text_layer_info:
+                text, top, left, width, height = (
+                    layer["text"],
+                    layer["top"],
+                    layer["left"],
+                    layer["size"][0],
+                    layer["size"][1],
+                )
+                
+                extracted_text_data.append(text)
 
-                    if text_image:
-                        mask = Image.new("L", image.size, 0)
-                        draw = ImageDraw.Draw(mask)
-                        draw.rectangle(
-                            [(left, top), (left + width, top + height)], fill=255
-                        )
-                        text_masks.append(mask)
-                    
-                    text_image.putalpha(mask)
-                    # 텍스트 레이어 데이터
-                extracted_text_data.append(layer["name"])
+                white_box = Image.new("RGB", (width, height), color="white")
+                common_image.paste(white_box, (left, top))
+            
+            # 텍스트제거 이미지 저장
+            remove_text_save_path = (
+                f"static/images/remove_text/{original_filename}_remove_text.png"
+            )
+            common_image.save(remove_text_save_path)
+            
+            session["source_size"] = source_size
+            session["converted_image_path"] = converted_image_path
+            session["original_filename"] = original_filename
+            # session["all_layer_info"] = all_layer_info
+            session["text_layer_info"] = text_layer_info
+            session["extracted_text_data"] = extracted_text_data
+            session["remove_text_save_path"] = remove_text_save_path
 
-                # 이미지 저장
-                remove_text_image.save(remove_text_save_path + remove_text_base_name)
-                text_image.save(text_save_path + text_base_name)
-
-                all_layer_info_list.append(all_layer_info)
+            return render_template(
+                "translate.html",
+                image_data=converted_image_path,
+                text_layer_info=text_layer_info,
+                all_layer_info=all_layer_info,
+                all_text_layer_info=all_text_layer_info,
+                extracted_text_data=extracted_text_data,
+                translated_text_data=translated_text_data
+            )
 
     except Exception as e:
-        layer_info = []
-        all_extracted_info_list = f"Error extracting text: {str(e)}"
-        extracted_text_data = []
+        return render_template(
+            "translate.html",
+            image_data=None,
+            translated_text_image_data=None,
+            all_layer_info=f"Error extracting text: {str(e)}",
+            text_layer_info=[],
+            extracted_text_data=[],
+            translated_text_data=""
+        )
+
+
+@app.route("/auto_translation", methods=["POST"])
+def auto_translation():
+    # 번역된 텍스트 데이터 리스트
+    translated_text_data = []
+
+    # 세션값 가져오기
+    text_layer_info = session.get("text_layer_info")
+    original_filename = session.get("original_filename")
+    converted_image_path = session.get("converted_image_path")
+    remove_text_save_path = session.get("remove_text_save_path")
+    extracted_text_data = session.get("extracted_text_data")
+    source_size = session.get("source_size")
+
+    target_language = request.form.get("target_language")
+    font_size = int(min(source_size) * 0.04)
+    font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", font_size)  # 사용할 폰트와 크기 설정
+
+    # 텍스트를 삽입 할 이미지 복사
+    translated_image = Image.open(remove_text_save_path).copy()
+
+    # 이미지에 번역된 텍스트들을 그려서 합치기
+    draw = ImageDraw.Draw(translated_image)
+
+    for layer in text_layer_info:
+        text, top, left = (
+            layer["text"],
+            layer["top"],
+            layer["left"],
+        )
+
+        # 텍스트 특수 기호 처리 및 번역
+        clean_text = text.replace("\r", "\n")
+        translated_text = translator.translate(clean_text, dest=target_language).text
+        translated_text_data.append(translated_text)
+
+        # 이미지에 텍스트 그리기
+        draw.text((left - 10, top), translated_text, fill="black", font=font)
+
+    # 번역 이미지 저장
+    translated_text_save_path = f"static/images/auto_translation/{target_language}/"
+    translated_text_base_name = f"{original_filename}_{target_language}.png"
+
+    # 경로내에 폴더가 없을 경우 폴더 생성
+    if not os.path.exists(translated_text_save_path):
+        os.mkdir(translated_text_save_path)
+
+    translated_image_path = translated_text_save_path + translated_text_base_name
+    translated_image.save(translated_image_path)
+
+    # 세션에 저장
+    session["translated_image_path"] = translated_image_path
+    session["target_language"] = target_language
+    session["translated_text_data"] = translated_text_data
 
     return render_template(
-        "index.html",
-        layer_info=layer_info,
-        all_extracted_info_list=all_extracted_info_list,
+        "translate.html",
+        image_data=converted_image_path,
+        translated_text_image_data=translated_image_path,
+        text_layer_info=text_layer_info,
         extracted_text_data=extracted_text_data,
+        translated_text_data=translated_text_data,
     )
+    
+@app.route("/user_translation", methods=["POST"])
+def user_translation():
+    user_translated_text_data = []
+    user_translated_text = []
+    
+    modified_texts = request.form.getlist('modified_text')
 
+    # 세션값 가져오기
+    text_layer_info = session.get("text_layer_info")
+    original_filename = session.get("original_filename")
+    remove_text_save_path = session.get("remove_text_save_path")
+    target_language = session.get("target_language")
+    converted_image_path = session.get("converted_image_path")
+    extracted_text_data = session.get("extracted_text_data")
+    source_size = session.get("source_size")
+    
+    font_size = int(min(source_size) * 0.04)
+    font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", font_size)
+    user_translated_image = Image.open(remove_text_save_path).copy()
+    draw = ImageDraw.Draw(user_translated_image)
+    
+    for index, layer in enumerate(text_layer_info):
+          
+        user_translated_text_data.append({
+            "text": modified_texts[index] if index < len(modified_texts) else "",
+            "top": layer["top"],
+            "left": layer["left"]
+        })
+    
+    for layer in user_translated_text_data:
+        modi_text, top, left = (
+            layer["text"],
+            layer["top"],
+            layer["left"],
+        )
+        modi_clean_text = modi_text.replace("\r\n", "\n")
+        user_translated_text.append(modi_clean_text)
+        
+        draw.text((left - 10, top), modi_clean_text, fill="black", font=font)
+    # 번역 이미지 저장
+    user_translated_text_save_path = f"static/images/user_translation/{target_language}/"
+    user_translated_text_base_name = f"user_{original_filename}_{target_language}.png"
+
+    # 경로내에 폴더가 없을 경우 폴더 생성
+    if not os.path.exists(user_translated_text_save_path):
+        os.mkdir(user_translated_text_save_path)
+
+    user_translated_image_path = user_translated_text_save_path + user_translated_text_base_name
+    user_translated_image.save(user_translated_image_path)
+    
+    # 번역 이미지 다운로드를 위한 경로 세션 저장
+    session["translated_image_path"] = user_translated_image_path
+    
+    return render_template(
+        "translate.html",
+        image_data=converted_image_path,
+        translated_text_image_data=user_translated_image_path,
+        # text_layer_info=text_layer_info,
+        extracted_text_data=extracted_text_data,
+        translated_text_data=user_translated_text,
+    )
+    
+
+# 가장 마지막으로 번역 작업 된 이미지만 다운로드
+@app.route("/download")
+def download():
+    translated_image_path = session.get("translated_image_path")
+    return send_file(translated_image_path, as_attachment=True)
+
+
+# @app.route("/session_clear")
+# def session_clear():
+#     session.clear()
 
 if __name__ == "__main__":
     app.run(debug=True)
