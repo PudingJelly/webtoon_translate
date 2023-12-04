@@ -14,7 +14,7 @@ translator = Translator()
 # target = 'en'
 
 # url = 'https://dapi.kakao.com/v3/translation/translate'
-# headers = {'Authorization': 'KakoAK2dbfc5c983dd45e8b7cbd82858a95c7d'}
+# headers = {'Authorization': ''}
 # data = {'src_lang': source, 'target_lang': target, 'query': text} 
 # response = requests.post(url=url, headers=headers, data=data) 
 # if response.status_code == 200:    
