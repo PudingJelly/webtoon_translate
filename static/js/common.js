@@ -1,21 +1,29 @@
 window.onload = function () {
 
     // 초기화 클릭
-    document.getElementById("init").addEventListener("click", e => initailize());
-    function initailize() {
-        document.getElementById("initailize").submit();
-    }
+    // document.getElementById("init").addEventListener("click", e => initailize());
+    // function initailize() {
+    //     document.getElementById("initialize").submit();
+    // }
+    $('#init').click(function () {
+        $('#initialize').submit();
+    });
 
     // 파일가져오기 클릭
     document.getElementById("upload").addEventListener("click", e => uploadImage());
     function uploadImage() {
         document.getElementById("source_file").click();
-        console.log("파일 가져오기");
     };
 
     // 파일가져오기 변동이 생길 때
+    // 파일 가져오기 취소 시 로딩써클 해제
     document.getElementById("source_file").addEventListener("change", function (e) {
-        document.getElementById("uploadForm").submit();
+        if(this.files.length === 0) {
+            $('loadingOverlay').hide();
+        } else {
+            document.getElementById("uploadForm").submit();
+            $('#loadingOverlay').show();
+        }
     });
 
     // 저장하기
@@ -27,16 +35,17 @@ window.onload = function () {
     document.getElementById("translate-button").addEventListener("click", e => all_translation());
     function all_translation() {
         document.getElementById("translateForm").submit();
+        $('#loadingOverlay').show();
     }
 
     // 사용자 번역하기
     document.getElementById("modify-button").addEventListener("click", e => user_translation());
     function user_translation() {
         document.getElementById("userTranslation").click();
+        $('#loadingOverlay').show();
     }
     document.getElementById("userTranslation").addEventListener("click", e => prepareModifiedTexts());
     function prepareModifiedTexts() {
-        console.log("호출!!");
         // 수정된 텍스트 데이터를 담을 빈 배열
         let modifiedTexts = [];
         let textAreas = document.querySelectorAll(".tr_text_data");
@@ -81,21 +90,6 @@ window.onload = function () {
 
     translatedImgContainer.addEventListener("scroll", function (e) {
         originImgContainer.scrollTop = this.scrollTop;
-    });
-
-    // 업로드 로딩써클
-    $('#upload').click(function () {
-        $('#loadingOverlay').show();
-    });
-
-    // 자동번역 로딩써클
-    $('#translate-button').click(function () {
-        $('#loadingOverlay').show();
-    });
-
-    // 사용자번역 로딩써클
-    $('#modify-button').click(function () {
-        $('#loadingOverlay').show();
     });
 
     // 파일 업로드 완료 시 로딩써클 해제

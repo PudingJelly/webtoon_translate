@@ -29,12 +29,15 @@ def upload_file():
     text_layer_info = []
     extracted_text_data = []
     translated_text_data  = []
+    all_layer_info = []
+    all_text_layer_info = []
 
     try:
         source_file = request.files["source_file"]
 
         if source_file:
             source = PSDImage.open(source_file)
+            source_size = source.width, source.height
 
             # PSD 파일의 이미지 추출
             image = source.compose()
@@ -49,6 +52,7 @@ def upload_file():
 
             # 모든 하위 레이어들을 찾아서 텍스트 레이어만 추출
             for layer in source.descendants(include_clip=True):
+                all_layer_info.append(layer)
                 if layer.kind == "type":
                     text_layer_info.append(
                         {
@@ -64,7 +68,6 @@ def upload_file():
             
             # 이미지 분리를 위한 원본소스 복사
             common_image = image.copy()
-            # translated_text_image = image.copy()
 
             # 텍스트 레이어 세부정보 추출
             for layer in text_layer_info:
@@ -86,7 +89,8 @@ def upload_file():
                 f"static/images/remove_text/{original_filename}_remove_text.png"
             )
             common_image.save(remove_text_save_path)
-
+            
+            session["source_size"] = source_size
             session["converted_image_path"] = converted_image_path
             session["original_filename"] = original_filename
             # session["all_layer_info"] = all_layer_info
@@ -98,6 +102,8 @@ def upload_file():
                 "translate.html",
                 image_data=converted_image_path,
                 text_layer_info=text_layer_info,
+                all_layer_info=all_layer_info,
+                all_text_layer_info=all_text_layer_info,
                 extracted_text_data=extracted_text_data,
                 translated_text_data=translated_text_data
             )
@@ -125,9 +131,11 @@ def auto_translation():
     converted_image_path = session.get("converted_image_path")
     remove_text_save_path = session.get("remove_text_save_path")
     extracted_text_data = session.get("extracted_text_data")
+    source_size = session.get("source_size")
 
     target_language = request.form.get("target_language")
-    font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", 70)  # 사용할 폰트와 크기 설정
+    font_size = int(min(source_size) * 0.03)
+    font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", font_size)  # 사용할 폰트와 크기 설정
 
     # 텍스트를 삽입 할 이미지 복사
     translated_image = Image.open(remove_text_save_path).copy()
@@ -190,8 +198,10 @@ def user_translation():
     converted_image_path = session.get("converted_image_path")
     extracted_text_data = session.get("extracted_text_data")
     translated_text_data = session.get("translated_text_data")
+    source_size = session.get("source_size")
     
-    font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", 70)
+    font_size = int(min(source_size) * 0.03)
+    font = ImageFont.truetype(f"static/fonts/NotoSansKR-Regular.ttf", font_size)
     user_translated_image = Image.open(remove_text_save_path).copy()
     
     draw = ImageDraw.Draw(user_translated_image)
@@ -232,8 +242,8 @@ def user_translation():
         image_data=converted_image_path,
         translated_text_image_data=user_translated_image_path,
         # text_layer_info=text_layer_info,
-        # extracted_text_data=extracted_text_data,
-        # translated_text_data=user_translated_text,
+        extracted_text_data=extracted_text_data,
+        translated_text_data=user_translated_text,
     )
     
 
