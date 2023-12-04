@@ -210,10 +210,10 @@ def user_translation():
             layer["top"],
             layer["left"],
         )
-        user_translated_text.append(modi_text)
+        modi_clean_text = modi_text.replace("\r\n", "\n")
+        user_translated_text.append(modi_clean_text)
         
-        draw.text((left - 10, top), modi_text, fill="black", font=font)
-    
+        draw.text((left - 10, top), modi_clean_text, fill="black", font=font)
     # 번역 이미지 저장
     user_translated_text_save_path = f"static/images/user_translation/{target_language}/"
     user_translated_text_base_name = f"user_{original_filename}_{target_language}.png"
@@ -231,9 +231,9 @@ def user_translation():
         "translate.html",
         image_data=converted_image_path,
         translated_text_image_data=user_translated_image_path,
-        text_layer_info=text_layer_info,
-        extracted_text_data=extracted_text_data,
-        translated_text_data=user_translated_text,
+        # text_layer_info=text_layer_info,
+        # extracted_text_data=extracted_text_data,
+        # translated_text_data=user_translated_text,
     )
     
 

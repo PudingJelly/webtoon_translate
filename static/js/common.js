@@ -14,12 +14,12 @@ window.onload = function () {
     };
 
     // 파일가져오기 변동이 생길 때
-    document.getElementById("source_file").addEventListener("change", function(e) {
+    document.getElementById("source_file").addEventListener("change", function (e) {
         document.getElementById("uploadForm").submit();
     });
 
     // 저장하기
-    document.getElementById("download").addEventListener("click", function(e) {
+    document.getElementById("download").addEventListener("click", function (e) {
         document.getElementById("downloadForm").submit();
     })
 
@@ -28,12 +28,12 @@ window.onload = function () {
     function all_translation() {
         document.getElementById("translateForm").submit();
     }
-    
+
     // 사용자 번역하기
-    // document.getElementById("modify-button").addEventListener("click", e => user_translation());
-    // function user_translation() {
-    //     document.getElementById("userTranslation").click();
-    // }
+    document.getElementById("modify-button").addEventListener("click", e => user_translation());
+    function user_translation() {
+        document.getElementById("userTranslation").click();
+    }
     document.getElementById("userTranslation").addEventListener("click", e => prepareModifiedTexts());
     function prepareModifiedTexts() {
         console.log("호출!!");
@@ -75,11 +75,31 @@ window.onload = function () {
     const originImgContainer = document.querySelector(".toon-image-origin");
     const translatedImgContainer = document.querySelector(".toon-image-translated");
 
-    originImgContainer.addEventListener("scroll", function(e) {
+    originImgContainer.addEventListener("scroll", function (e) {
         translatedImgContainer.scrollTop = this.scrollTop;
     });
 
-    translatedImgContainer.addEventListener("scroll", function(e) {
+    translatedImgContainer.addEventListener("scroll", function (e) {
         originImgContainer.scrollTop = this.scrollTop;
+    });
+
+    // 업로드 로딩써클
+    $('#upload').click(function () {
+        $('#loadingOverlay').show();
+    });
+
+    // 자동번역 로딩써클
+    $('#translate-button').click(function () {
+        $('#loadingOverlay').show();
+    });
+
+    // 사용자번역 로딩써클
+    $('#modify-button').click(function () {
+        $('#loadingOverlay').show();
+    });
+
+    // 파일 업로드 완료 시
+    $(document).ajaxStop(function () {
+        $('#loadingOverlay').hide(); // 로딩 이미지 숨기기
     });
 }

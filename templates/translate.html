@@ -58,7 +58,7 @@
                 <button class="custom-button" id="download">
                     <img src="../static/icon/database_before.png" alt="Icon">저장하기
                 </button>
-                
+
                 <form id="initailize" action="/">
                     <input style="display: none" type="submit" value="초기화">
                 </form>
@@ -118,11 +118,12 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
                         <div id="form-wrapper">
                             <!-- extracted_text_data의 길이 만큼 요소들 생성 -->
                             <div id="all-translate">
-                                <form id="translateForm" action="/auto_translation" method="post" enctype="multipart/form-data">
+                                <form id="translateForm" action="/auto_translation" method="post"
+                                    enctype="multipart/form-data">
                                     <select id="target_language" name="target_language">
                                         <option value="en">English</option>
                                         <option value="ja">Japnese</option>
@@ -142,13 +143,15 @@
                             <div>
                                 <h4 class="text_data">{{ extracted_text_data[index] }}</h4>
                                 <textarea name="tr_text_data{{ index }}" class="tr_text_data" cols="40"
-                                rows="3">{{ translated_text_data[index] }}</textarea>
+                                    rows="3">{{ translated_text_data[index] }}</textarea>
                             </div>
                             {% endfor %}
+                            <button class="custom-button" id="modify-button">
+                                사용자 번역
+                            </button>
                             <form id="userTranslationForm" action="/user_translation" method="post"
                                 enctype="multipart/form-data">
-                                
-                                <input type="button" id="userTranslation" value="사용자 번역">
+                                <input style="display:none;" type="button" id="userTranslation" value="사용자 번역">
                             </form>
                         </div>
                     </div>
@@ -157,6 +160,11 @@
         </div>
         <!-- End of Content Wrapper -->
 
+    </div>
+
+    <!-- Loading 이미지 -->
+    <div id="loadingOverlay" style="display: none;">
+        <div class="loader"></div>
     </div>
 
 </body>
