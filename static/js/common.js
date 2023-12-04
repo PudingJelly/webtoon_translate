@@ -98,7 +98,7 @@ window.onload = function () {
         $('#loadingOverlay').show();
     });
 
-    // 파일 업로드 완료 시
+    // 파일 업로드 완료 시 로딩써클 해제
     $(document).ajaxStop(function () {
         $('#loadingOverlay').hide(); // 로딩 이미지 숨기기
     });
