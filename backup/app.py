@@ -1,13 +1,38 @@
 import os
-import requests
+# import requests
+# import json
+from google.cloud import translate
 from flask import Flask, render_template, request, session, send_file
-from googletrans import Translator
+# from googletrans import Translator
 from psd_tools import PSDImage
 from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
 app.secret_key = "webtoontest"
 translator = Translator()
+
+# from google.cloud import translate
+
+# def translate_text(text="안녕하세요", project_id="anylinker-webtoon"):
+
+#     client = translate.TranslationServiceClient()
+#     location = "global"
+#     parent = f"projects/{project_id}/locations/{location}"
+
+#     response = client.translate_text(
+#         request={
+#             "parent": parent,
+#             "contents": [text],
+#             "mime_type": "text/plain",
+#             "source_language_code": "ko",
+#             "target_language_code": "en",
+#         }
+#     )
+
+#     for translation in response.translations:
+#         print("Translated text: {}".format(translation.translated_text))
+
+# translate_text()
 
 # text = "안녕하세요"
 # source = 'kr'

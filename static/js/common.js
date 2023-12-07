@@ -79,11 +79,11 @@ window.onload = function () {
     const translatedImgContainer = $(".toon-image-translated");
 
     originImgContainer.on("scroll", function() {
-        translatedImgContainer.scrollTop = this.scrollTop;
+        translatedImgContainer.scrollTop($(this).scrollTop());
     });
 
     translatedImgContainer.on("scroll", function() {
-        originImgContainer.scrollTop = this.scrollTop;
+        originImgContainer.scrollTop($(this).scrollTop());
     });
 
     // 파일 업로드 완료 시 로딩써클 해제
